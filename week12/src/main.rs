@@ -10,80 +10,104 @@ use std::fmt;
 fn main() {
     println!("Week 12: Generics and traits");
 
-    // Try it out once you have implementations working:
-    // let mut s: Stack<i32> = Stack::new();
-    // s.push(1);
-    // s.push(2);
-    // s.push(3);
-    // println!("{}", s);           // requires Display impl
-    // for item in s { println!("{}", item); }  // requires IntoIterator impl
+    let mut s: Stack<i32> = Stack::new();
+    s.push(1);
+    s.push(2);
+    s.push(3);
+
+    // requires Display impl
+    println!("Stack contents: {}", s);
+
+    // requires IntoIterator impl
+    println!("Popping items:");
+    for item in s {
+        println!("{}", item);
+    }
 }
 
 // ============================================================================
 // STACK<T> — implement all methods and trait impls below.
-// When you implement a method, remove the leading `_` from each parameter name.
 // ============================================================================
 
 /// A generic last-in, first-out (LIFO) stack.
-///
-/// The top of the stack is the last element pushed.
-#[allow(dead_code)]
 pub struct Stack<T> {
     data: Vec<T>,
 }
 
-#[allow(clippy::new_without_default)]
+impl<T> Default for Stack<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Stack<T> {
     /// Creates a new, empty stack.
     pub fn new() -> Self {
-        todo!("Implement Stack::new")
+        Stack { data: Vec::new() }
     }
 
     /// Pushes `item` onto the top of the stack.
-    pub fn push(&mut self, _item: T) {
-        todo!("Implement push")
+    pub fn push(&mut self, item: T) {
+        self.data.push(item);
     }
 
     /// Removes and returns the top item, or `None` if the stack is empty.
     pub fn pop(&mut self) -> Option<T> {
-        todo!("Implement pop")
+        self.data.pop()
     }
 
     /// Returns a reference to the top item without removing it,
     /// or `None` if the stack is empty.
     pub fn peek(&self) -> Option<&T> {
-        todo!("Implement peek")
+        self.data.last()
     }
 
     /// Returns `true` if the stack contains no items.
     pub fn is_empty(&self) -> bool {
-        todo!("Implement is_empty")
+        self.data.is_empty()
     }
 
     /// Returns the number of items in the stack.
     pub fn len(&self) -> usize {
-        todo!("Implement len")
+        self.data.len()
     }
 }
 
 // ============================================================================
 // DISPLAY — format the stack as "[bottom, ..., top]"
-//
-// Example: a stack with 1 pushed first and 3 pushed last prints as "[1, 2, 3]".
-// An empty stack prints as "[]".
 // ============================================================================
 impl<T: fmt::Debug> fmt::Display for Stack<T> {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!("Implement Display for Stack<T> — hint: write!(f, \"[...]\") using self.data")
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Formats the internal vector using its Debug implementation
+        write!(f, "{:?}", self.data)
     }
 }
 
 // ============================================================================
 // ITERATOR — consume the stack from top to bottom
-//
-// Implement the helper struct and then the two trait impls below.
 // ============================================================================
 
+pub struct StackIter<T> {
+    stack: Stack<T>,
+}
+
+impl<T> Iterator for StackIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // LIFO order: pop from the end of the vector (the top of the stack)
+        self.stack.pop()
+    }
+}
+
+impl<T> IntoIterator for Stack<T> {
+    type Item = T;
+    type IntoIter = StackIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        StackIter { stack: self }
+    }
+}
 // ============================================================================
 // TESTS — DO NOT MODIFY
 // ============================================================================
