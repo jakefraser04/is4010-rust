@@ -1,8 +1,3 @@
-// Week 14 — validator.rs
-//
-// Implement password strength validation.
-// The tests at the bottom verify your implementations.
-
 #![allow(dead_code)]
 use std::fmt;
 
@@ -27,51 +22,87 @@ impl fmt::Display for PasswordStrength {
     }
 }
 
-/// Rates the strength of `password` using these rules:
-///
-/// Start with score 0, add points for each criterion met:
-///   +1  length ≥ 8
-///   +1  length ≥ 12
-///   +1  length ≥ 16
-///   +1  contains at least one lowercase letter
-///   +1  contains at least one uppercase letter
-///   +1  contains at least one digit
-///   +1  contains at least one symbol (non-alphanumeric character)
-///
-/// Map score to strength:
-///   0–2 → Weak
-///   3–4 → Medium
-///   5–6 → Strong
-///   7   → VeryStrong
-pub fn validate_strength(_password: &str) -> PasswordStrength {
-    todo!("Implement validate_strength")
+/// Rates the strength of `password` using specific scoring rules.
+pub fn validate_strength(password: &str) -> PasswordStrength {
+    let mut score = 0;
+    let len = password.len();
+
+    if len >= 8 {
+        score += 1;
+    }
+    if len >= 12 {
+        score += 1;
+    }
+    if len >= 16 {
+        score += 1;
+    }
+
+    if password.chars().any(|c| c.is_lowercase()) {
+        score += 1;
+    }
+    if password.chars().any(|c| c.is_uppercase()) {
+        score += 1;
+    }
+    if password.chars().any(|c| c.is_ascii_digit()) {
+        score += 1;
+    }
+    if password.chars().any(|c| !c.is_alphanumeric()) {
+        score += 1;
+    }
+
+    match score {
+        0..=2 => PasswordStrength::Weak,
+        3..=4 => PasswordStrength::Medium,
+        5..=6 => PasswordStrength::Strong,
+        7 => PasswordStrength::VeryStrong,
+        _ => PasswordStrength::VeryStrong,
+    }
 }
 
 /// Returns `true` if `password` matches a common weak pattern.
-///
-/// Check for these patterns (case-insensitive):
-///   - All characters are the same (e.g. "aaaa", "1111")
-///   - The password is one of the 10 common passwords listed in COMMON_PASSWORDS
-pub fn check_common_patterns(_password: &str) -> bool {
-    todo!("Implement check_common_patterns")
+pub fn check_common_patterns(password: &str) -> bool {
+    if password.is_empty() {
+        return true;
+    }
+
+    let first_char = password.chars().next().unwrap();
+    if password.chars().all(|c| c == first_char) {
+        return true;
+    }
+
+    let pwd_lower = password.to_lowercase();
+    COMMON_PASSWORDS.iter().any(|&common| common == pwd_lower)
 }
 
 /// Estimates the Shannon entropy of `password` in bits.
-///
-/// Entropy = length × log₂(charset_size)
-///
-/// Determine charset_size by which character classes are present:
-///   lowercase only          → 26
-///   + uppercase             → 52
-///   + digits                → 62
-///   + any non-alphanumeric  → 94
-///
-/// Use `f64::log2(charset_size as f64) * length as f64`.
-pub fn calculate_entropy(_password: &str) -> f64 {
-    todo!("Implement calculate_entropy")
+pub fn calculate_entropy(password: &str) -> f64 {
+    let length = password.len();
+    if length == 0 {
+        return 0.0;
+    }
+
+    let has_lower = password.chars().any(|c| c.is_lowercase());
+    let has_upper = password.chars().any(|c| c.is_uppercase());
+    let has_digit = password.chars().any(|c| c.is_ascii_digit());
+    let has_symbol = password.chars().any(|c| !c.is_alphanumeric());
+
+    let mut size: f64 = 0.0;
+    if has_symbol {
+        size = 94.0;
+    } else if has_digit {
+        size = 62.0;
+    } else if has_upper {
+        size = 52.0;
+    } else if has_lower {
+        size = 26.0;
+    }
+
+    if size == 0.0 {
+        return 0.0;
+    }
+    (size.log2()) * length as f64
 }
 
-/// Ten common passwords to flag as weak patterns.
 pub const COMMON_PASSWORDS: &[&str] = &[
     "password",
     "123456",
@@ -84,6 +115,8 @@ pub const COMMON_PASSWORDS: &[&str] = &[
     "monkey",
     "dragon",
 ];
+
+// ... (Tests remain the same as provided in your snippet)
 
 // ============================================================================
 // TESTS — DO NOT MODIFY
